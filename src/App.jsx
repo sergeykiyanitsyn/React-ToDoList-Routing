@@ -1,76 +1,42 @@
-import { Tasks } from './components/Task'
-import { ButtonAdd, ButtonUpdate, ButtonDelete } from './components/Buttons'
-import { Form } from './components/Form'
-import { Message } from './components/Message'
-import styles from './App.module.css'
 import { useState } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { TaskPage, MainPage, Page404 } from './components'
 
 const App = () => {
-  const [refreshTasksFlag, setRefreshTasksFlag] = useState(false)
-  // Показ сообщения
-  const [addFlag, setAddFlag] = useState(false)
-  const [updFlag, setUpdFlag] = useState(false)
-  const [delFlag, setDelFlag] = useState(false)
-  //Блокируют кнопки
-  const [isCreating, setIsCreating] = useState(false)
-  const [isDeliting, setIsDeliting] = useState(false)
-  const [isUpdating, setIsUpdating] = useState(false)
-  // Обновляет задачи
-  const refreshTasks = () => setRefreshTasksFlag(!refreshTasksFlag)
-  // Вывод формы и получение ID
-  const [updatingTaskForm, setUpdatingTaskForm] = useState(false)
-  const [updatingTaskId, setUpadtingTaskId] = useState(null)
+  const [tasks, setTasks] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  const refreshTasks = () => {
+    setIsLoading(true)
+
+    fetch('http://localhost:3005/tasks')
+      .then((loadedData) => loadedData.json())
+      .then((serverTasks) => {
+        setTasks(serverTasks)
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
+  }
 
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.taskHeaders}> Лист задач </div>
-      <div className={styles.flexButtons}>
-        <ButtonAdd
-          setAddFlag={setAddFlag}
-          setUpdFlag={setUpdFlag}
-          setDelFlag={setDelFlag}
-          isCreating={isCreating}
-        ></ButtonAdd>
-        <ButtonUpdate
-          setAddFlag={setAddFlag}
-          setUpdFlag={setUpdFlag}
-          setDelFlag={setDelFlag}
-          isUpdating={isUpdating}
-          setUpdatingTaskForm={setUpdatingTaskForm}
-        ></ButtonUpdate>
-        <ButtonDelete
-          setAddFlag={setAddFlag}
-          setUpdFlag={setUpdFlag}
-          setDelFlag={setDelFlag}
-          isDeliting={isDeliting}
-          setUpdatingTaskForm={setUpdatingTaskForm}
-        ></ButtonDelete>
-      </div>
-      {(addFlag || updatingTaskForm) && (
-        <Form
-          addFlag={addFlag}
-          setAddFlag={setAddFlag}
-          updatingTaskForm={updatingTaskForm}
-          setUpdatingTaskForm={setUpdatingTaskForm}
-          setIsCreating={setIsCreating}
-          setIsUpdating={setIsUpdating}
-          refreshTasks={refreshTasks}
-          updatingTaskId={updatingTaskId}
-        ></Form>
-      )}
-      <Message updFlag={updFlag} delFlag={delFlag}></Message>
-      <Tasks
-        refreshTasks={refreshTasks}
-        refreshTasksFlag={refreshTasksFlag}
-        updFlag={updFlag}
-        delFlag={delFlag}
-        setUpdFlag={setUpdFlag}
-        setDelFlag={setDelFlag}
-        setIsDeliting={setIsDeliting}
-        setUpdatingTaskForm={setUpdatingTaskForm}
-        setUpadtingTaskId={setUpadtingTaskId}
-      ></Tasks>
-    </div>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <MainPage
+            tasks={tasks}
+            setTasks={setTasks}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            refreshTasks={refreshTasks}
+          />
+        }
+      />
+      <Route path="/tasks/:id" element={<TaskPage refreshTasks={refreshTasks} />}></Route>
+      <Route path="*" element={<Navigate to="/404" />}></Route>
+      <Route path="/404" element={<Page404 />}></Route>
+    </Routes>
   )
 }
 

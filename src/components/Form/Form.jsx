@@ -2,31 +2,22 @@ import { useState } from 'react'
 import PropTypes from 'prop-types'
 import styles from './Form.module.css'
 
-export const Form = ({
-  addFlag,
-  updatingTaskId,
-  updatingTaskForm,
-  setIsUpdating,
-  setUpdatingTaskForm,
-  setAddFlag,
-  setIsCreating,
-  refreshTasks,
-}) => {
+export const Form = ({ setAddFlag, refreshTasks }) => {
   const [title, setValueTitle] = useState('')
   const [description, setValueDescription] = useState('')
 
   const onChangeTitle = ({ target }) => {
-    setValueTitle(target.value)
+    setValueTitle(target.value.trim())
   }
 
   const onChangeDescription = ({ target }) => {
-    setValueDescription(target.value)
+    setValueDescription(target.value.trim())
   }
 
   const onSubmit = (event) => {
     event.preventDefault()
 
-    if (addFlag) {
+    if (title && description) {
       fetch('http://localhost:3005/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json; charset=utf-8' },
@@ -38,24 +29,9 @@ export const Form = ({
         .then(() => refreshTasks())
         .finally(() => {
           setAddFlag(false)
-          setIsCreating(false)
         })
-    }
-
-    if (updatingTaskForm) {
-      fetch(`http://localhost:3005/tasks/${updatingTaskId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
-        body: JSON.stringify({
-          title: `${title}`,
-          description: `${description}`,
-        }),
-      })
-        .then(() => refreshTasks())
-        .finally(() => {
-          setIsUpdating(false)
-          setUpdatingTaskForm(false)
-        })
+    } else {
+      setAddFlag(false)
     }
 
     setValueTitle('')
@@ -77,19 +53,13 @@ export const Form = ({
         onChange={onChangeDescription}
       />
       <button className={styles.formNewTasksButton} type="submit">
-        <i className="bi bi-cloud-download"></i>
+        сохранить
       </button>
     </form>
   )
 }
 
 Form.propTypes = {
-  addFlag: PropTypes.bool,
-  updatingTaskId: PropTypes.string,
-  updatingTaskForm: PropTypes.any,
-  setIsUpdating: PropTypes.any,
-  setUpdatingTaskForm: PropTypes.any,
   setAddFlag: PropTypes.any,
-  setIsCreating: PropTypes.any,
   refreshTasks: PropTypes.any,
 }

@@ -1,19 +1,26 @@
 /* eslint-disable react/prop-types */
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import styles from './Button.module.css'
 import PropTypes from 'prop-types'
 
-export const ButtonDelete = ({
-  setAddFlag,
-  setUpdFlag,
-  setDelFlag,
-  isDeliting,
-  setUpdatingTaskForm,
-}) => {
+export const ButtonDelete = ({ refreshTasks, urlId }) => {
+  const [isDeliting, setIsDeliting] = useState(false)
+
+  const nagigate = useNavigate()
+
   const deleteTask = () => {
-    setAddFlag(false)
-    setUpdFlag(false)
-    setDelFlag(true)
-    setUpdatingTaskForm(false)
+    setIsDeliting(true)
+    fetch(`http://localhost:3005/tasks/${urlId}`, {
+      method: 'DELETE',
+    })
+      .then(() => {
+        refreshTasks()
+        nagigate('/')
+      })
+      .finally(() => {
+        setIsDeliting(false)
+      })
   }
 
   return (
@@ -25,6 +32,5 @@ export const ButtonDelete = ({
 
 ButtonDelete.propTypes = {
   refreshTasks: PropTypes.func,
-  setDelFlag: PropTypes.any,
-  setUpdatingTaskForm: PropTypes.any,
+  urlId: PropTypes.string,
 }

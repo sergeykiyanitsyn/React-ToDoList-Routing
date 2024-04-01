@@ -1,0 +1,18 @@
+/* ------- Сортировка ------ */
+
+.sorting {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.sortingButton {
+  background-color: #ffffff;
+  border: #000 solid 1px;
+  border-radius: 10px;
+}
+
+.sortingButton:hover {
+  background-color: #999999;
+}

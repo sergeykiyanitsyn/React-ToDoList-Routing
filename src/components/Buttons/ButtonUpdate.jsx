@@ -1,31 +1,26 @@
 import styles from './Button.module.css'
 import PropTypes from 'prop-types'
 
-export const ButtonUpdate = ({
-  setAddFlag,
-  setUpdFlag,
-  setDelFlag,
-  isUpdating,
-  setUpdatingTaskForm,
-}) => {
+export const ButtonUpdate = ({ updFlag, setUpdFlag }) => {
   const updateTask = () => {
-    setAddFlag(false)
     setUpdFlag(true)
-    setDelFlag(false)
-    setUpdatingTaskForm(false)
   }
 
   return (
-    <button disabled={isUpdating} onClick={updateTask} className={styles.button}>
-      Изменить
-    </button>
+    <>
+      <button disabled={updFlag} onClick={updateTask} className={styles.button}>
+        Изменить
+      </button>
+      {updFlag && (
+        <button className={styles.button} onClick={() => setUpdFlag(false)}>
+          Отменить
+        </button>
+      )}
+    </>
   )
 }
 
 ButtonUpdate.propTypes = {
-  isUpdating: PropTypes.bool,
-  setAddFlag: PropTypes.any,
+  updFlag: PropTypes.bool,
   setUpdFlag: PropTypes.any,
-  setDelFlag: PropTypes.any,
-  setUpdatingTaskForm: PropTypes.any,
 }

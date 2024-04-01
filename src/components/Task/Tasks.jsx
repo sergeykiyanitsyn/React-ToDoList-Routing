@@ -1,167 +1,59 @@
-import { useEffect, useState } from 'react'
 import styles from './Task.module.css'
 import PropTypes from 'prop-types'
-import { onValue, ref, value } from 'firebase/database'
-import { db } from '../../firebase'
+import { NavLink } from 'react-router-dom'
 
 const isEmpty = ''
 
-export const Tasks = ({
-  refreshTasksFlag,
-  updFlag,
-  delFlag,
-  setUpdFlag,
-  setDelFlag,
-  setIsDeliting,
-  refreshTasks,
-  setUpdatingTaskForm,
-  setUpadtingTaskId,
-}) => {
-  const [tasks, setTasks] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [textFinder, setTextFinder] = useState('')
-  const [sortOn, setSortOn] = useState(false)
-  const [isSorting, setIsSorting] = useState(false)
+export const Tasks = ({ tasks, initialInputValue, sortOn }) => {
+  let newTasks = [...tasks]
+  let shortTasks = []
+  const widthPXSymbolInString = 10
+  const widthContainer = 192
+  const widthSymbolContainer = widthContainer / widthPXSymbolInString
 
-  const onClickSort = () => {
-    setIsSorting(true)
-    setSortOn(!sortOn)
+  if (sortOn === true) {
+    newTasks.sort((a, b) => a.title.localeCompare(b.title))
   }
-
-  const getServerTasks = () => {
-    setIsLoading(true)
-
-    return fetch('http://localhost:3005/tasks')
-      .then((loadedData) => loadedData.json())
-      .then((loadedProducts) => {
-        setTasks(loadedProducts)
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
-  }
-
-  const findTasks = (event) => {
-    event.preventDefault()
-    let allFindTasks = []
-    getServerTasks().then(() => {
-      tasks.map(({ id, title, description }) => {
-        // решить вопрос с маленьким регистром
-        const index = description.search(textFinder)
-        if (index !== -1) {
-          const finderTasks = { id, title, description }
-          allFindTasks.push(finderTasks)
-        }
-      })
-      setTasks(allFindTasks)
+  const searchTasks = (tasks, searchWord) => {
+    const foundTasks = []
+    tasks.map((task) => {
+      const foundTask = task.description.toUpperCase().search(searchWord.toUpperCase())
+      if (foundTask !== -1) {
+        foundTasks.push(task)
+      }
     })
+    console.log('foundTasks', foundTasks)
+    newTasks = foundTasks
   }
 
-  const onChangeFinder = ({ target }) => {
-    setTextFinder(target.value)
-    if (target.value === isEmpty) {
-      refreshTasks()
-    }
+  if (initialInputValue !== isEmpty) {
+    searchTasks(newTasks, initialInputValue)
   }
 
-  const showClick = (id) => {
-    if (updFlag) {
-      setUpadtingTaskId(id)
-      setUpdatingTaskForm(true)
-      setUpdFlag(false)
+  newTasks.map(({ description, id, title }) => {
+    if (description.length > widthSymbolContainer) {
+      const shortDescription = description.slice(0, widthSymbolContainer - 3) + '...'
+      const shortText = { id, title, description: shortDescription }
+      shortTasks.push(shortText)
+    } else {
+      shortTasks.push({ id, title, description })
     }
-    if (delFlag) {
-      fetch(`http://localhost:3005/tasks/${id}`, {
-        method: 'DELETE',
-      })
-        .then(() => refreshTasks())
-        .finally(() => {
-          setIsDeliting(false)
-          setDelFlag(false)
-        })
-    }
-  }
-
-  useEffect(() => {
-    const tasksDbRef = ref(db, 'tasks')
-
-    return onValue(tasksDbRef, (snapshot) => {
-      const loaderProducts = snapshot.val()
-
-      setTasks(loaderProducts)
-      setIsLoading(false)
-    })
-
-    // if (sortOn === true) {
-    //   setIsLoading(true)
-
-    //   fetch('http://localhost:3005/tasks')
-    //     .then((loadedData) => loadedData.json())
-    //     .then((loadedProducts) => {
-    //       const sortTasks = loadedProducts.sort((a, b) => {
-    //         if (a.title < b.title) {
-    //           return -1
-    //         }
-    //         if (a.title > b.title) {
-    //           return 1
-    //         }
-    //         return 0
-    //       })
-    //       setTasks(sortTasks)
-    //     })
-    //     .finally(() => {
-    //       setIsLoading(false)
-    //       setIsSorting(false)
-    //     })
-    // } else {
-    //   getServerTasks().then(() => setIsSorting(false))
-    // }
-  }, [])
+  })
 
   return (
     <>
-      <div className={styles.addFunctional}>
-        <div className={styles.sorting}>
-          <label htmlFor="sort">
-            {' '}
-            Сортировка по алфавиту{' '}
-            <button
-              className={styles.sortingButton}
-              disabled={isSorting}
-              id="sort"
-              type="click"
-              onClick={onClickSort}
-            >
-              {sortOn ? 'On' : 'Off'}
-            </button>
-          </label>{' '}
-        </div>
-
-        <form className={styles.search} onSubmit={findTasks}>
-          <input
-            className={styles.searchString}
-            type="text"
-            placeholder="Поиск задачи по описанию"
-            onChange={onChangeFinder}
-          />
-
-          <button className={styles.searcbtn} type="submit">
-            <i className="bi bi-search"></i>
-          </button>
-        </form>
-      </div>
       <div className={styles.flexDiv}>
-        {isLoading ? (
-          <div className={styles.loader}></div>
-        ) : (
-          tasks.map(({ id, title, description }) => {
+        {shortTasks.length > 0 ? (
+          shortTasks.map(({ id, title, description }) => {
             return (
-              <div key={id} className={styles.note} onClick={() => showClick(id)}>
+              <NavLink key={id} to={`/tasks/${id}`} className={styles.note}>
                 <div> {title} </div>
                 <div> {description} </div>
-              </div>
+              </NavLink>
             )
           })
+        ) : (
+          <div> Похоже, что таких задач еще нет. Самое время добавить их</div>
         )}
       </div>
     </>
@@ -169,13 +61,7 @@ export const Tasks = ({
 }
 
 Tasks.propTypes = {
-  refreshTasksFlag: PropTypes.bool,
-  refreshTasks: PropTypes.func,
-  updFlag: PropTypes.bool,
-  delFlag: PropTypes.bool,
-  setUpdFlag: PropTypes.any,
-  setDelFlag: PropTypes.any,
-  setIsDeliting: PropTypes.any,
-  setUpdatingTaskForm: PropTypes.any,
-  setUpadtingTaskId: PropTypes.any,
+  tasks: PropTypes.array,
+  initialInputValue: PropTypes.string,
+  sortOn: PropTypes.bool,
 }
